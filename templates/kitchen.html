@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}Kitchen{% endblock %}
+{% block content %}
+{% set has_availability = has_page('kitchen_routes.set_availability') %}
+<div id="cancel-alerts"></div>
+<div class="d-flex justify-content-between align-items-center mb-2">
+  <h1 class="h4 mb-0">Kitchen orders (oldest first)</h1>
+  {% if has_availability %}
+  <button class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#menu-panel">Item availability</button>
+  {% endif %}
+</div>
+
+{% if has_availability %}
+<!-- FR 6: mark items available / unavailable (only shown once FR 6 has been added) -->
+<div id="menu-panel" class="collapse card card-body mb-3">
+  <div id="availability" class="d-flex flex-wrap gap-2"></div>
+</div>
+{% endif %}
+
+<!-- FR 1: one card per active order -->
+<div id="orders" class="kitchen-grid"></div>
+<p id="no-orders" class="text-muted fs-5">No orders waiting.</p>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='kitchen.js') }}"></script>
+{% if has_page('kitchen_routes.set_availability') %}
+<script src="{{ url_for('static', filename='kitchen_availability.js') }}"></script>
+{% endif %}
+{% endblock %}
