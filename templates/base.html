@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}TrapSnacks{% endblock %} - TrapSnacks</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <link rel="icon" href="data:,">
+</head>
+<body data-live="{{ '1' if current_user.is_authenticated else '0' }}">
+  <nav class="navbar navbar-expand navbar-dark bg-dark px-3 flex-wrap gap-1">
+    <a class="navbar-brand fw-bold" href="/">TrapSnacks</a>
+    {% if current_user.is_authenticated %}
+    <div class="navbar-nav me-auto flex-wrap">
+      {# Each link only appears once the feature that provides its page has been added #}
+      {% if current_user.role in ('cashier', 'owner') %}
+        {% if has_page('order_routes.cashier_page') %}<a class="nav-link" href="/cashier">Orders</a>{% endif %}
+        {% if has_page('delivery_display_routes.deliveries_page') %}<a class="nav-link" href="/deliveries">Deliveries</a>{% endif %}
+      {% endif %}
+      {% if current_user.role in ('chef', 'owner') and has_page('order_status_routes.kitchen_page') %}
+        <a class="nav-link" href="/kitchen">Kitchen</a>
+      {% endif %}
+      {% if current_user.role == 'owner' %}
+        {% if has_page('remove_rider_routes.rider_list') %}<a class="nav-link" href="/riders">Riders</a>{% endif %}
+        {% if has_page('staff_routes.staff_list') %}<a class="nav-link" href="/staff">Staff</a>{% endif %}
+      {% endif %}
+      {% if current_user.role == 'rider' and has_page('rider_routes.rider_page') %}
+        <a class="nav-link" href="/rider">My deliveries</a>
+      {% endif %}
+    </div>
+    <button id="sound-btn" class="btn btn-sm btn-outline-warning me-2" type="button">Enable sound</button>
+    <span class="navbar-text me-3 d-none d-md-inline">{{ current_user.username }} ({{ current_user.role }})</span>
+    <a class="btn btn-sm btn-outline-light" href="/logout">Log out</a>
+    {% endif %}
+  </nav>
+
+  <div id="offline-banner" class="alert alert-danger rounded-0 mb-0 text-center fw-bold d-none">
+    Disconnected - trying to reconnect. Do not rely on this screen until this message disappears.
+  </div>
+
+  <main class="container-fluid py-3">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category if category != 'message' else 'info' }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <div id="toast-area" class="toast-area"></div>
+
+  <script src="{{ url_for('static', filename='vendor/bootstrap.bundle.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='vendor/socket.io.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

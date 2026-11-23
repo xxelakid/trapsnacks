@@ -1,0 +1,26 @@
+/* static/styles.css - extra styles on top of Bootstrap */
+
+/* Big touch targets (at least 48 x 48 px) for gloved hands (FR 1 SR-4) */
+.btn-xl { font-size: 1.4rem; padding: 0.9rem 1.2rem; min-height: 64px; font-weight: 700; }
+.menu-btn { min-width: 9rem; min-height: 64px; }
+.qty-btn, .remove-btn { min-width: 48px; min-height: 48px; }
+
+/* Kitchen cards in a grid */
+.kitchen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+.kitchen-card { border-width: 3px; }
+.instructions { background: #ffe1e1; border: 2px solid #d00; color: #900; font-weight: 700;
+                padding: 0.5rem; border-radius: 0.4rem; font-size: 1.1rem; white-space: pre-wrap; }
+.changed { background: #fff3a0; font-weight: 700; }
+.removed { text-decoration: line-through; color: #b00; }
+
+/* Countdown */
+.countdown { font-size: 1.6rem; font-weight: 700; }
+.late { color: #d00; font-weight: 700; }
+
+/* Rider statuses */
+.status-available { background: #198754; }
+.status-reserved { background: #ffc107; color: #000; }
+.status-unavailable { background: #6c757d; }
+
+/* Pop-up messages */
+.toast-area { position: fixed; right: 1rem; bottom: 1rem; z-index: 2000; max-width: 24rem; }

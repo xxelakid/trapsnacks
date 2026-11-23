@@ -1,0 +1,10 @@
+# Files Git should NOT upload
+venv/
+.venv/
+__pycache__/
+*.pyc
+instance/
+backups/
+.pytest_cache/
+.vscode/
+.DS_Store

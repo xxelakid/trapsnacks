@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Welcome{% endblock %}
+{% block content %}
+<h1 class="h4">Welcome, {{ current_user.username }}</h1>
+<p>The main screen for your role ({{ current_user.role }}) has not been added to the system yet.
+   It will appear here automatically once that feature is added.</p>
+{% if current_user.role == 'owner' and has_page('staff_routes.staff_list') %}
+  <a class="btn btn-primary" href="/staff">Manage staff</a>
+{% endif %}
+{% endblock %}
