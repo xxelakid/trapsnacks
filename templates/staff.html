@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Staff{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Staff (cashiers and chefs)</h1>
+  <a href="/staff/new" class="btn btn-primary btn-lg">Add staff</a>
+</div>
+{% if staff %}
+<table class="table align-middle">
+  <thead><tr><th>Username</th><th>Role</th><th></th></tr></thead>
+  <tbody>
+  {% for user in staff %}
+    <tr>
+      <td>{{ user.username }}</td>
+      <td><span class="badge {{ 'bg-warning text-dark' if user.role == 'chef' else 'bg-primary' }}">{{ user.role|capitalize }}</span></td>
+      <td class="text-end">
+        <a class="btn btn-sm btn-outline-primary" href="/staff/{{ user.id }}/edit">Edit</a>
+        <form method="post" action="/staff/{{ user.id }}/remove" class="d-inline confirm-form"
+              data-message="Remove {{ user.username }}? They will no longer be able to log in.">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-outline-danger" type="submit">Remove</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="text-muted">No cashier or chef accounts yet. Click "Add staff".</p>
+{% endif %}
+<p class="text-muted small">Riders are managed on the Riders page. Removed accounts are kept (switched off) so the order history still shows who did what.</p>
+{% endblock %}
+{% block scripts %}
+<script>
+  // Ask before removing a staff account
+  document.querySelectorAll('.confirm-form').forEach(form => {
+    form.addEventListener('submit', event => { if (!confirm(form.dataset.message)) event.preventDefault(); });
+  });
+</script>
+{% endblock %}
