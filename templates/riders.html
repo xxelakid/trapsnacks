@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Riders{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Riders</h1>
+  {% if has_page('new_rider_routes.new_rider') %}<a href="/riders/new" class="btn btn-primary btn-lg">Add a rider</a>{% endif %}
+</div>
+{% if riders %}
+<table class="table align-middle">
+  <thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>E-mail</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for rider in riders %}
+    <tr>
+      <td>{{ rider.id }}</td>
+      <td>{{ rider.name }}</td>
+      <td>{{ rider.phone }}</td>
+      <td>{{ rider.email }}</td>
+      <td><span class="badge status-{{ rider.status }}">{{ rider.status }}</span></td>
+      <td class="text-end">
+        {% if has_page('rider_routes.owner_sets_status') %}
+          {% if rider.status == 'available' %}
+            <button class="btn btn-sm btn-outline-secondary set-status" data-id="{{ rider.id }}" data-status="unavailable">Set off shift</button>
+          {% elif rider.status == 'unavailable' %}
+            <button class="btn btn-sm btn-outline-success set-status" data-id="{{ rider.id }}" data-status="available">Set available</button>
+          {% endif %}
+        {% endif %}
+        {% if has_page('edit_rider_routes.edit_rider') %}<a class="btn btn-sm btn-outline-primary" href="/riders/{{ rider.id }}/edit">Edit</a>{% endif %}
+        <form method="post" action="/riders/{{ rider.id }}/remove" class="d-inline confirm-form"
+              data-message="Remove {{ rider.name }}? They will no longer receive deliveries.">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="text-muted">No riders yet.</p>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+  // FR 9 SR-1: ask before deleting a rider
+  document.querySelectorAll('.confirm-form').forEach(form => {
+    form.addEventListener('submit', event => { if (!confirm(form.dataset.message)) event.preventDefault(); });
+  });
+  // FR 4 SR-1: the owner can switch a rider between available and unavailable
+  document.querySelectorAll('.set-status').forEach(button => {
+    button.addEventListener('click', async () => {
+      const result = await post(`/api/riders/${button.dataset.id}/status`, {status: button.dataset.status});
+      if (result.ok) { location.reload(); } else { toast(result.error, 'danger'); }
+    });
+  });
+</script>
+{% endblock %}
