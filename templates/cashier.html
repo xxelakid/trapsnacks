@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Orders{% endblock %}
+{% block content %}
+{# Tells cashier.js whether the Edit (FR 2) and Cancel (FR 3) features have been added yet #}
+<div id="page" data-can-edit="{{ '1' if has_page('edit_order_routes.edit_page') else '0' }}"
+     data-can-cancel="{{ '1' if has_page('cancel_order_routes.cancel_page') else '0' }}"></div>
+<div class="row g-3">
+  <!-- Left: the menu (FR 0, FR 6) -->
+  <div class="col-12 col-lg-5">
+    <h2 class="h5">Menu</h2>
+    <div id="menu"></div>
+  </div>
+
+  <!-- Right: the order being built (FR 0) -->
+  <div class="col-12 col-lg-7">
+    <h2 class="h5">New order</h2>
+    <div class="card card-body">
+      <div id="cart"></div>
+      <div class="btn-group my-3" role="group">
+        <input type="radio" class="btn-check" name="order_type" id="type-pickup" value="pickup">
+        <label class="btn btn-outline-primary btn-lg" for="type-pickup">Pickup</label>
+        <input type="radio" class="btn-check" name="order_type" id="type-delivery" value="delivery">
+        <label class="btn btn-outline-primary btn-lg" for="type-delivery">Delivery</label>
+      </div>
+      <div class="row g-2">
+        <div class="col-md-6"><input id="customer_name" class="form-control" placeholder="Customer name"></div>
+        <div class="col-md-6"><input id="phone" class="form-control" placeholder="Phone number"></div>
+        <div class="col-12 d-none" id="address-box"><input id="address" class="form-control" placeholder="Delivery address (required for delivery)"></div>
+        <div class="col-12"><textarea id="special_instructions" class="form-control" rows="2" placeholder="Special instructions (for example: no onions, nut allergy)"></textarea></div>
+      </div>
+      <div id="order-error" class="alert alert-danger mt-3 d-none"></div>
+      <button id="confirm-btn" class="btn btn-success btn-lg mt-3">Confirm order</button>
+    </div>
+
+    <!-- Active orders with their live status (FR 1 SR-2) -->
+    <h2 class="h5 mt-4">Today's active orders</h2>
+    <table class="table table-sm align-middle">
+      <thead><tr><th>#</th><th>Time</th><th>Type</th><th>Items</th><th>Status</th><th></th></tr></thead>
+      <tbody id="orders"></tbody>
+    </table>
+    <p id="no-orders" class="text-muted">No active orders.</p>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='order_form.js') }}"></script>
+<script src="{{ url_for('static', filename='cashier.js') }}"></script>
+{% endblock %}
