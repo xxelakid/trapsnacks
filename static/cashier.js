@@ -18,6 +18,8 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
   const missing = [];
   if (cart.length === 0) missing.push('at least one item');
   if (!type) missing.push('Pickup or Delivery');
+  if (!document.getElementById('customer_name').value.trim()) missing.push('the customer name');
+  if (document.getElementById('phone').value.replace(/\D/g, '').length < 7) missing.push('a contact phone number (at least 7 digits)');
   if (type && type.value === 'delivery' && !document.getElementById('address').value.trim()) missing.push('the delivery address');
   if (missing.length) { showError('Please add: ' + missing.join(', ') + '.'); return; }
 

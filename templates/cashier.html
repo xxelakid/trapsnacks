@@ -23,11 +23,12 @@
         <label class="btn btn-outline-primary btn-lg" for="type-delivery">Delivery</label>
       </div>
       <div class="row g-2">
-        <div class="col-md-6"><input id="customer_name" class="form-control" placeholder="Customer name"></div>
-        <div class="col-md-6"><input id="phone" class="form-control" placeholder="Phone number"></div>
-        <div class="col-12 d-none" id="address-box"><input id="address" class="form-control" placeholder="Delivery address (required for delivery)"></div>
+        <div class="col-md-6"><input id="customer_name" class="form-control" placeholder="Customer name *" required></div>
+        <div class="col-md-6"><input id="phone" class="form-control" placeholder="Contact phone number *" required></div>
+        <div class="col-12 d-none" id="address-box"><input id="address" class="form-control" placeholder="Delivery address *" required></div>
         <div class="col-12"><textarea id="special_instructions" class="form-control" rows="2" placeholder="Special instructions (for example: no onions, nut allergy)"></textarea></div>
       </div>
+      <p class="text-muted small mt-2 mb-0">* required. Name and phone are needed for every order; the address only for delivery.</p>
       <div id="order-error" class="alert alert-danger mt-3 d-none"></div>
       <button id="confirm-btn" class="btn btn-success btn-lg mt-3">Confirm order</button>
     </div>

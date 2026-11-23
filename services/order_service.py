@@ -1,5 +1,6 @@
 # services/order_service.py
 # OrderService - FR 0 Create Order (and FR 6 SR-2: unavailable items are refused).
+# Customer name and phone are required for every order; address for deliveries.
 
 from extensions import db
 from models import Order, OrderItem, MenuItem, StatusChange
@@ -28,16 +29,33 @@ class OrderService:
         return result
 
     @staticmethod
-    def create_order(data, user):
+    def check_customer_details(data):
+        """Every order (pickup AND delivery) needs the customer's name and a contact
+        phone number; a delivery also needs an address. All missing details are
+        listed in one message so the cashier can fix everything at once."""
+        missing = []
         order_type = data.get('order_type')
         if order_type not in ('pickup', 'delivery'):
-            raise ValueError('Choose Pickup or Delivery.')
+            missing.append('Pickup or Delivery')
+        if not (data.get('customer_name') or '').strip():
+            missing.append('the customer name')
+        phone_digits = [ch for ch in (data.get('phone') or '') if ch.isdigit()]
+        if len(phone_digits) < 7:
+            missing.append('a contact phone number (at least 7 digits)')
         if order_type == 'delivery' and not (data.get('address') or '').strip():
-            raise ValueError('A delivery order needs an address.')
+            missing.append('the delivery address')
+        if not data.get('items'):
+            missing.append('at least one item')
+        if missing:
+            raise ValueError('Please add: ' + ', '.join(missing) + '.')
 
-        order = Order(order_type=order_type,
-                      customer_name=(data.get('customer_name') or '').strip(),
-                      phone=(data.get('phone') or '').strip(),
+    @staticmethod
+    def create_order(data, user):
+        OrderService.check_customer_details(data)
+
+        order = Order(order_type=data['order_type'],
+                      customer_name=data['customer_name'].strip(),
+                      phone=data['phone'].strip(),
                       address=(data.get('address') or '').strip(),
                       special_instructions=(data.get('special_instructions') or '').strip())
         order.items = OrderService.make_items(data.get('items'))
