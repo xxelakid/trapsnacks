@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Add a rider{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <h1 class="h4">Add a rider</h1>
+    <form method="post" class="card card-body">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% include '_rider_fields.html' %}
+      <hr>
+      <p class="text-muted small mb-2">Login for the rider's phone (not part of FR 7):</p>
+      <label class="form-label" for="username">Username</label>
+      <input class="form-control mb-2" id="username" name="username" value="{{ form.get('username', '') }}">
+      <label class="form-label" for="password">Password (at least 6 characters)</label>
+      <input class="form-control mb-3" id="password" name="password" type="password">
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary btn-lg" type="submit">Save rider</button>
+        <a class="btn btn-outline-secondary btn-lg" href="/riders">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

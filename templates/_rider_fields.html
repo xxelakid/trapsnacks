@@ -1,0 +1,11 @@
+{# The five rider fields, shared by new_rider.html and edit_rider.html (FR 7, FR 8) #}
+<label class="form-label" for="name">Name</label>
+<input class="form-control mb-2" id="name" name="name" value="{{ form.get('name', '') }}">
+<label class="form-label" for="phone">Phone number</label>
+<input class="form-control mb-2" id="phone" name="phone" value="{{ form.get('phone', '') }}">
+<label class="form-label" for="address">Permanent address</label>
+<input class="form-control mb-2" id="address" name="address" value="{{ form.get('address', '') }}">
+<label class="form-label" for="trn">TRN</label>
+<input class="form-control mb-2" id="trn" name="trn" value="{{ form.get('trn', '') }}">
+<label class="form-label" for="email">E-mail address</label>
+<input class="form-control mb-2" id="email" name="email" type="email" value="{{ form.get('email', '') }}">
