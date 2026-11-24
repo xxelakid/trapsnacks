@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Edit {{ rider.name }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <h1 class="h4">Edit rider #{{ rider.id }}</h1>
+    <form method="post" class="card card-body">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% include '_rider_fields.html' %}
+      <div class="d-flex gap-2 mt-2">
+        <button class="btn btn-primary btn-lg" type="submit">Save changes</button>
+        <a class="btn btn-outline-secondary btn-lg" href="/riders">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

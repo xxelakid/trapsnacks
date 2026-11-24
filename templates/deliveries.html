@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Deliveries{% endblock %}
+{% block content %}
+<div id="page" data-alert-minutes="{{ alert_minutes }}" data-is-owner="{{ '1' if current_user.role == 'owner' else '0' }}"></div>
+<h1 class="h4">Deliveries</h1>
+<ul class="nav nav-tabs mb-3">
+  <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-active">Active</button></li>
+  <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-history" id="history-tab">History</button></li>
+</ul>
+<div class="tab-content">
+  <div class="tab-pane fade show active" id="tab-active">
+    <table class="table align-middle">
+      <thead><tr><th>Order</th><th>Rider</th><th>Status</th><th>Food</th><th>Time left to pick up</th><th>Alerts</th><th class="owner-only">Assign rider</th></tr></thead>
+      <tbody id="active"></tbody>
+    </table>
+    <p id="no-active" class="text-muted fs-5">No active deliveries.</p>
+  </div>
+  <div class="tab-pane fade" id="tab-history">
+    <table class="table table-sm">
+      <thead><tr><th>Order</th><th>Date</th><th>Rider</th><th>Picked up</th><th>Delivered</th><th>Minutes on the road</th><th>On time?</th></tr></thead>
+      <tbody id="history"></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='deliveries.js') }}"></script>
+{% endblock %}
