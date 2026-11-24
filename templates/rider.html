@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}My deliveries{% endblock %}
+{% block content %}
+<h1 class="h4">Hi {{ rider.name }}</h1>
+
+<!-- FR 4 SR-1: available / unavailable -->
+<div class="card card-body mb-3">
+  <div class="d-flex flex-wrap align-items-center gap-2">
+    <span class="fs-5">My status: <span id="my-status" class="badge fs-6"></span></span>
+    <button id="go-available" class="btn btn-success btn-lg">I'm available</button>
+    <button id="go-unavailable" class="btn btn-outline-secondary btn-lg">I'm off shift</button>
+  </div>
+</div>
+
+<!-- FR 4 SR-2/3: offers -->
+<h2 class="h5">New delivery offers</h2>
+<div id="offers"></div>
+<p id="no-offers" class="text-muted">No offers right now.</p>
+
+<!-- FR 4 SR-4 and FR 5 SR-2: my delivery -->
+<h2 class="h5 mt-4">My delivery</h2>
+<div id="current"></div>
+<p id="no-current" class="text-muted">You have no delivery at the moment.</p>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='rider.js') }}"></script>
+{% endblock %}
