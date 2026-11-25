@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% block title %}Order History{% endblock %}
+{% block content %}
+{% set badge = {'delivered': 'bg-success', 'pickup': 'bg-primary', 'cancelled': 'bg-danger'} %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h1 class="h4 mb-0">Order History</h1>
+  <a class="btn btn-outline-secondary" href="/history.csv?{{ request.query_string.decode() }}">Download CSV</a>
+</div>
+
+{# Summary: counts for each outcome (with the date and search filters applied) #}
+<div class="row g-2 mb-3">
+  {% for key, label in outcomes.items() %}
+  <div class="col-12 col-md-4">
+    <a class="card text-decoration-none h-100 {{ 'border-dark border-2' if filters.outcome == key }}"
+       href="?outcome={{ key }}&date_from={{ filters.date_from }}&date_to={{ filters.date_to }}&q={{ filters.q|urlencode }}">
+      <div class="card-body py-2">
+        <div class="text-muted small">{{ label }}</div>
+        <div class="fs-3 fw-bold text-body">{{ summary[key].count }}</div>
+        <div class="small text-muted">
+          {{ 'Value lost' if key == 'cancelled' else 'Sales' }}: ${{ '{:,.2f}'.format(summary[key].sales) }}
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+  <div class="col-6 col-md-2">
+    <label class="form-label small mb-0" for="outcome">Show</label>
+    <select class="form-select" id="outcome" name="outcome">
+      <option value="all">All finished orders</option>
+      {% for key, label in outcomes.items() %}
+      <option value="{{ key }}" {{ 'selected' if filters.outcome == key }}>{{ label }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-6 col-md-2">
+    <label class="form-label small mb-0" for="date_from">From</label>
+    <input class="form-control" type="date" id="date_from" name="date_from" value="{{ filters.date_from }}">
+  </div>
+  <div class="col-6 col-md-2">
+    <label class="form-label small mb-0" for="date_to">To</label>
+    <input class="form-control" type="date" id="date_to" name="date_to" value="{{ filters.date_to }}">
+  </div>
+  <div class="col-6 col-md-3">
+    <label class="form-label small mb-0" for="q">Search</label>
+    <input class="form-control" type="search" id="q" name="q" value="{{ filters.q }}"
+           placeholder="Order #, customer or phone">
+  </div>
+  <div class="col-12 col-md-3 d-flex gap-2">
+    <button class="btn btn-primary flex-fill" type="submit">Filter</button>
+    <a class="btn btn-outline-secondary flex-fill" href="/history">Clear</a>
+  </div>
+</form>
+
+{% if orders %}
+<p class="text-muted small mb-1">{{ total_count }} order{{ '' if total_count == 1 else 's' }} found. Click a row to see the details.</p>
+<div class="table-responsive">
+<table class="table align-middle table-hover">
+  <thead>
+    <tr><th>Order</th><th>Outcome</th><th>Ordered</th><th>Finished</th><th>Customer</th>
+        <th>Items</th><th class="text-end">Total</th></tr>
+  </thead>
+  <tbody>
+  {% for order in orders %}
+    {% set kind = outcome_of(order) %}
+    {% set done = finished_at(order) %}
+    <tr class="history-row" role="button" data-bs-toggle="collapse" data-bs-target="#details-{{ order.id }}">
+      <td class="fw-bold">#{{ order.id }}</td>
+      <td><span class="badge {{ badge[kind] }}">{{ outcomes[kind] }}</span></td>
+      <td>{{ order.created_at.strftime('%d %b %Y %I:%M %p') if order.created_at else '-' }}</td>
+      <td>{{ done.strftime('%I:%M %p') if done else '-' }}</td>
+      <td>{{ order.customer_name }}<div class="small text-muted">{{ order.phone }}</div></td>
+      <td>{{ order.items|sum(attribute='quantity') }} item{{ '' if order.items|sum(attribute='quantity') == 1 else 's' }}</td>
+      <td class="text-end">${{ '{:,.2f}'.format(order_total(order)) }}</td>
+    </tr>
+    <tr class="collapse" id="details-{{ order.id }}">
+      <td colspan="7" class="bg-light">
+        <div class="row g-3 p-2">
+          <div class="col-md-4">
+            <h2 class="h6">Items</h2>
+            <ul class="mb-2">
+              {% for item in order.items %}
+              <li>{{ item.quantity }} x {{ item.menu_item.name }}{% if item.addons %} <span class="text-muted">({{ item.addons }})</span>{% endif %}
+                  - ${{ '{:,.2f}'.format(item.menu_item.price * item.quantity) }}</li>
+              {% endfor %}
+            </ul>
+            {% if order.special_instructions %}<div class="small"><b>Instructions:</b> {{ order.special_instructions }}</div>{% endif %}
+            {% if order.edited %}<div class="small text-muted">This order was edited after it was placed.</div>{% endif %}
+          </div>
+          <div class="col-md-4">
+            <h2 class="h6">{{ 'Delivery' if order.order_type == 'delivery' else 'Pickup' }}</h2>
+            {% if order.order_type == 'delivery' %}
+              <div class="small"><b>Address:</b> {{ order.address }}</div>
+              {% if order.delivery %}
+                <div class="small"><b>Rider:</b> {{ order.delivery.rider.name if order.delivery.rider else 'No rider accepted' }}</div>
+                {% if order.delivery.picked_up_at %}<div class="small"><b>Picked up by rider:</b> {{ order.delivery.picked_up_at.strftime('%I:%M %p') }}</div>{% endif %}
+                {% if order.delivery.delivered_at %}<div class="small"><b>Delivered:</b> {{ order.delivery.delivered_at.strftime('%I:%M %p') }}</div>{% endif %}
+              {% endif %}
+            {% else %}
+              <div class="small">Customer collects at the shop.</div>
+            {% endif %}
+            {% if order.cancel_reason %}<div class="small text-danger mt-2"><b>Cancel reason:</b> {{ order.cancel_reason }}</div>{% endif %}
+          </div>
+          <div class="col-md-4">
+            <h2 class="h6">Timeline</h2>
+            <ul class="small mb-0 list-unstyled">
+              {% for change in order.changes|sort(attribute='changed_at') %}
+              <li>{{ change.changed_at.strftime('%I:%M %p') }} - <b>{{ change.new_status }}</b>
+                  {% if change.user %}<span class="text-muted">by {{ change.user.username }}</span>{% endif %}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% if pages > 1 %}
+{% set base = '?outcome=' ~ filters.outcome ~ '&date_from=' ~ filters.date_from ~ '&date_to=' ~ filters.date_to ~ '&q=' ~ (filters.q|urlencode) %}
+<nav><ul class="pagination">
+  <li class="page-item {{ 'disabled' if page == 1 }}"><a class="page-link" href="{{ base }}&page={{ page - 1 }}">Newer</a></li>
+  <li class="page-item disabled"><span class="page-link">Page {{ page }} of {{ pages }}</span></li>
+  <li class="page-item {{ 'disabled' if page == pages }}"><a class="page-link" href="{{ base }}&page={{ page + 1 }}">Older</a></li>
+</ul></nav>
+{% endif %}
+{% else %}
+<p class="text-muted fs-5">No finished orders match these filters.</p>
+{% endif %}
+
+<p class="text-muted small">Totals use today's menu prices. Pickup orders count as picked up once the kitchen marks them Ready. Orders still being made or still on the road are not shown here.</p>
+{% endblock %}

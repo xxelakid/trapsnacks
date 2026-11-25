@@ -23,6 +23,7 @@
         <a class="nav-link" href="/kitchen">Kitchen</a>
       {% endif %}
       {% if current_user.role == 'owner' %}
+        {% if has_page('order_history_routes.history_page') %}<a class="nav-link" href="/history">Order History</a>{% endif %}
         {% if has_page('remove_rider_routes.rider_list') %}<a class="nav-link" href="/riders">Riders</a>{% endif %}
         {% if has_page('staff_routes.staff_list') %}<a class="nav-link" href="/staff">Staff</a>{% endif %}
       {% endif %}
