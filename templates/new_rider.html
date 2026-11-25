@@ -8,7 +8,7 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       {% include '_rider_fields.html' %}
       <hr>
-      <p class="text-muted small mb-2">Login for the rider's phone (not part of FR 7):</p>
+      <p class="text-muted small mb-2">Login for the rider's phone:</p>
       <label class="form-label" for="username">Username</label>
       <input class="form-control mb-2" id="username" name="username" value="{{ form.get('username', '') }}">
       <label class="form-label" for="password">Password (at least 6 characters)</label>
