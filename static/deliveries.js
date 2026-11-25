@@ -25,8 +25,9 @@ function renderActive() {
       <td>${esc(d.rider)}</td>
       <td><span class="badge fs-6 ${STATUS_STYLE[d.status] || 'bg-secondary'}">${d.status}</span></td>
       <td>${esc(d.order_status)}</td>
-      <td class="fs-5">${d.status === 'Accepted' ? `<span data-deadline="${d.pickup_deadline}"></span>`
-                       : d.status === 'Picked up' ? 'Picked up at ' + clock(d.picked_up_at) : '-'}</td>
+      <td class="fs-5">${d.status === 'Picked up' ? 'Picked up at ' + clock(d.picked_up_at)
+                       : d.order_status === 'Ready' ? '<span class="badge bg-success fs-6">Ready to pick up</span>'
+                       : d.pickup_deadline ? `<span data-deadline="${d.pickup_deadline}"></span>` : '-'}</td>
       <td class="alert-cell"></td>
       <td class="owner-only ${IS_OWNER ? '' : 'd-none'}">
         ${d.status !== 'Picked up' ? `
@@ -56,7 +57,8 @@ function updateAlerts() {
     const cell = row.querySelector('.alert-cell');
     let html = '';
     if (noRiderTooLong(d)) html = '<span class="badge bg-danger fs-6">No rider has accepted!</span>';
-    if (d.status === 'Accepted' && new Date(d.pickup_deadline) < Date.now()) html = '<span class="badge bg-danger fs-6">LATE</span>';
+    if (d.status !== 'Picked up' && d.order_status !== 'Ready' && d.pickup_deadline
+        && new Date(d.pickup_deadline) < Date.now()) html = '<span class="badge bg-danger fs-6">Meal LATE</span>';
     if (cell.innerHTML !== html) cell.innerHTML = html;
     row.classList.toggle('table-danger', html !== '');
   });
@@ -81,10 +83,10 @@ async function loadHistory() {
   document.getElementById('history').innerHTML = list.map(d => {
     const minutes = d.picked_up_at && d.delivered_at
       ? Math.round((new Date(d.delivered_at) - new Date(d.picked_up_at)) / 60000) : '';
-    const onTime = d.pickup_deadline && d.picked_up_at && new Date(d.picked_up_at) <= new Date(d.pickup_deadline);
+    const onTime = d.pickup_deadline && d.ready_at && new Date(d.ready_at) <= new Date(d.pickup_deadline);
     return `<tr><td>#${d.order_id}</td><td>${new Date(d.delivered_at).toLocaleDateString()}</td>
       <td>${esc(d.rider)}</td><td>${clock(d.picked_up_at)}</td><td>${clock(d.delivered_at)}</td>
-      <td>${minutes}</td><td>${onTime ? 'Yes' : '<span class="text-danger">Late pickup</span>'}</td></tr>`;
+      <td>${minutes}</td><td>${onTime ? 'Yes' : '<span class="text-danger">Late</span>'}</td></tr>`;
   }).join('') || '<tr><td colspan="7" class="text-muted">No completed deliveries yet.</td></tr>';
 }
 document.getElementById('history-tab').addEventListener('click', loadHistory);

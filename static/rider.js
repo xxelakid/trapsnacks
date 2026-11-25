@@ -1,6 +1,8 @@
 // static/rider.js
 // RiderScreen: availability (FR 4 SR-1), offers and Accept (FR 4 SR-2/3),
-// pickup countdown (FR 4 SR-4) and Picked up / Delivered (FR 5 SR-2).
+// meal preparation countdown (FR 4 SR-4) and Picked up / Delivered (FR 5 SR-2).
+// The countdown starts when the chef begins preparing; it stops and shows READY TO PICK UP
+// as soon as the kitchen marks the order Ready.
 
 let myStatus = 'unavailable';
 let offers = {};       // delivery id -> offer
@@ -23,14 +25,25 @@ function renderOffers() {
     <div class="card card-body mb-2 offer-card">
       <div class="fs-5 fw-bold">Order #${o.order_id}</div>
       <div class="mb-2">Deliver to: ${esc(o.address)}</div>
+      ${foodStatus(o.order_status, o.pickup_deadline)}
       <button class="btn btn-success btn-xl accept-btn" data-id="${o.id}">ACCEPT</button>
     </div>`).join('');
+  updateCountdowns();
   document.querySelectorAll('.accept-btn').forEach(btn => btn.addEventListener('click', async () => {
     btn.disabled = true;
     const result = await post(`/api/deliveries/${btn.dataset.id}/accept`);
     if (result.ok) { setCurrent(result.data); }
     else { toast(result.error, 'warning'); delete offers[btn.dataset.id]; renderOffers(); }
   }));
+}
+
+// "Meal preparation time left" countdown, or READY TO PICK UP once the kitchen is done
+function foodStatus(orderStatus, deadline) {
+  if (orderStatus === 'Ready') {
+    return '<div class="mb-2"><span class="badge bg-success fs-5">READY TO PICK UP</span></div>';
+  }
+  if (!deadline) return '';
+  return `<div class="fs-5 mb-2">Meal preparation time left: <span class="countdown" data-deadline="${deadline}"></span></div>`;
 }
 
 function setCurrent(delivery) {
@@ -53,9 +66,7 @@ function renderCurrent() {
         ${d.special_instructions ? `<div class="instructions mb-2">${esc(d.special_instructions)}</div>` : ''}
         <ul>${d.items.map(i => `<li>${i.qty} x ${esc(i.name)}</li>`).join('')}</ul>
         ${d.status === 'Accepted' ? `
-          <div class="fs-5 mb-2">Food: ${ready ? '<span class="badge bg-success fs-6">READY FOR PICKUP</span>'
-                                             : '<span class="badge bg-warning text-dark fs-6">Being prepared</span>'}</div>
-          <div class="fs-5">Time left to pick up: <span class="countdown" data-deadline="${d.pickup_deadline}"></span></div>
+          ${foodStatus(d.order_status, d.pickup_deadline)}
           <button class="btn btn-primary btn-xl w-100 mt-3 deliv-btn" data-status="Picked up" ${ready ? '' : 'disabled'}>PICKED UP</button>`
         : `<button class="btn btn-success btn-xl w-100 mt-3 deliv-btn" data-status="Delivered">DELIVERED</button>`}
       </div>
@@ -101,7 +112,10 @@ socket.on('offer_closed', closed => { delete offers[closed.id]; renderOffers(); 
 socket.on('delivery_assigned', d => { setCurrent(d); playAlert(); toast(`You have order #${d.order_id}.`, 'success'); });
 socket.on('delivery_updated', d => { setCurrent(d); playAlert(); toast(`Order #${d.order_id} was changed. Check the details.`, 'warning'); });
 socket.on('order_ready_for_pickup', info => {
-  if (current && current.order_id === info.order_id) { current.order_status = 'Ready'; renderCurrent(); playAlert(); }
+  if (current && current.order_id === info.order_id) {
+    current.order_status = 'Ready'; renderCurrent(); playAlert();    // countdown stops
+    toast(`Order #${info.order_id} is READY TO PICK UP.`, 'success');
+  }
 });
 socket.on('delivery_cancelled', info => {
   toast(`Order #${info.order_id} was CANCELLED. Do not pick it up.`, 'danger'); playAlert();

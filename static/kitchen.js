@@ -1,5 +1,6 @@
 // static/kitchen.js
 // KitchenDisplayScreen: orders oldest first (FR 1), edits (FR 2) and cancellations (FR 3).
+// Delivery orders being prepared show the meal preparation countdown (PREP_MINUTES).
 // The item availability panel (FR 6) is in kitchen_availability.js.
 
 const orders = {};           // id -> order
@@ -28,6 +29,8 @@ function renderOrders() {
           ${diff ? diff.removed.map(r => `<li class="removed">${esc(r)}</li>`).join('') : ''}
         </ul>
         ${o.special_instructions ? `<div class="instructions">${esc(o.special_instructions)}</div>` : ''}
+        ${o.status === 'Preparing' && o.prep_deadline ? `
+          <div class="prep-timer mt-2">Prep time left <span class="countdown" data-deadline="${o.prep_deadline}"></span></div>` : ''}
       </div>
       <div class="card-footer">
         ${o.status === 'New'
@@ -36,6 +39,7 @@ function renderOrders() {
       </div>
     </div>`;
   }).join('');
+  updateCountdowns();          // fill in the countdowns straight away
 
   document.querySelectorAll('.status-btn').forEach(btn => btn.addEventListener('click', async () => {
     btn.disabled = true;
@@ -62,7 +66,10 @@ async function loadOrders() {
 socket.on('order_created', order => { orders[order.id] = order; renderOrders(); playAlert(); });
 socket.on('order_status_changed', update => {
   if (!orders[update.id]) return;
-  if (update.status === 'New' || update.status === 'Preparing') { orders[update.id].status = update.status; }
+  if (update.status === 'New' || update.status === 'Preparing') {
+    orders[update.id].status = update.status;
+    if (update.prep_deadline) orders[update.id].prep_deadline = update.prep_deadline;   // countdown starts
+  }
   else { delete orders[update.id]; delete changes[update.id]; }   // Ready orders leave the kitchen screen
   renderOrders();
 });

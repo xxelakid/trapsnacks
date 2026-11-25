@@ -75,6 +75,8 @@ class Order(db.Model):
             'edited': self.edited,
             'created_at': iso(self.created_at),
             'delivery_status': self.delivery.status if self.delivery else None,
+            # Delivery orders: when the meal must be ready (starts when the chef begins preparing)
+            'prep_deadline': iso(self.delivery.pickup_deadline) if self.delivery else None,
             'rider': self.delivery.rider.name if self.delivery and self.delivery.rider else None,
             'cancel_reason': self.cancel_reason,
             'total': self.total,
@@ -143,7 +145,14 @@ class Delivery(db.Model):
     def offer_dict(self):
         """What every available rider sees in an offer: no customer name or phone (Security 3)."""
         return {'id': self.id, 'order_id': self.order_id, 'address': self.order.address,
-                'offered_at': iso(self.offered_at)}
+                'offered_at': iso(self.offered_at), 'pickup_deadline': iso(self.pickup_deadline),
+                'order_status': self.order.status}
+
+    @property
+    def ready_at(self):
+        """When the kitchen marked the meal Ready (None if not yet)."""
+        times = [c.changed_at for c in self.order.changes if c.new_status == 'Ready']
+        return max(times) if times else None
 
     def full_dict(self):
         """What only the rider who accepted the delivery sees."""
@@ -165,4 +174,5 @@ class Delivery(db.Model):
                 'rider': self.rider.name if self.rider else 'Waiting for rider',
                 'order_status': self.order.status,
                 'offered_at': iso(self.offered_at), 'pickup_deadline': iso(self.pickup_deadline),
-                'picked_up_at': iso(self.picked_up_at), 'delivered_at': iso(self.delivered_at)}
+                'picked_up_at': iso(self.picked_up_at), 'delivered_at': iso(self.delivered_at),
+                'ready_at': iso(self.ready_at)}

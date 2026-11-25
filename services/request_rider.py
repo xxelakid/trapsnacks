@@ -13,8 +13,12 @@ from services.notifier import Notifier
 class RequestRider:
     @staticmethod
     def offer_delivery(order):
-        """FR 4 SR-2: send an offer to every available rider."""
-        delivery = Delivery(order_id=order.id, status='Offered', offered_at=datetime.now())
+        """FR 4 SR-2: send an offer to every available rider.
+        This happens when the chef starts preparing, so the meal preparation countdown
+        (PREP_MINUTES) starts now. Riders, the kitchen and staff all count down to it."""
+        now = datetime.now()
+        delivery = Delivery(order_id=order.id, status='Offered', offered_at=now,
+                            pickup_deadline=now + timedelta(minutes=current_app.config['PREP_MINUTES']))
         db.session.add(delivery)
         db.session.commit()
         for rider in Rider.query.filter_by(status='available', removed=False):
@@ -28,13 +32,12 @@ class RequestRider:
         if rider.status != 'available':
             raise ValueError('You must be available (and not on another delivery) to accept.')
         now = datetime.now()
-        deadline = now + timedelta(minutes=current_app.config['PICKUP_MINUTES'])
 
         # This UPDATE only changes the row while it is still "Offered".
         # If two riders tap Accept at the same moment, only the first one changes it.
         taken = Delivery.query.filter_by(id=delivery_id, status='Offered').update(
-            {'status': 'Accepted', 'rider_id': rider.id,
-             'accepted_at': now, 'pickup_deadline': deadline})
+            {'status': 'Accepted', 'rider_id': rider.id, 'accepted_at': now})
+        # (pickup_deadline is NOT changed: the countdown started when the chef began preparing)
         if taken == 0:
             db.session.rollback()
             raise ValueError('Sorry, this delivery has already been taken.')
@@ -62,8 +65,7 @@ class RequestRider:
         now = datetime.now()
         delivery.rider = new_rider
         delivery.status = 'Accepted'
-        delivery.accepted_at = now
-        delivery.pickup_deadline = now + timedelta(minutes=current_app.config['PICKUP_MINUTES'])
+        delivery.accepted_at = now                 # the preparation countdown keeps running
         new_rider.status = 'reserved'
         db.session.commit()
 

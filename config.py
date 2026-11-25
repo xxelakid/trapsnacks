@@ -33,5 +33,7 @@ class Config:
         "pool_recycle": 300
     }
 
-    PICKUP_MINUTES = 12
+    # A delivery order's meal must be ready this many minutes after the chef taps
+    # "Start preparing". The countdown shows on the kitchen, rider and delivery screens.
+    PREP_MINUTES = 10
     NO_RIDER_ALERT_MINUTES = 2
