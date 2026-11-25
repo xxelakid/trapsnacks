@@ -17,6 +17,7 @@
       {# Each link only appears once the feature that provides its page has been added #}
       {% if current_user.role in ('cashier', 'owner') %}
         {% if has_page('order_routes.cashier_page') %}<a class="nav-link" href="/cashier">Orders</a>{% endif %}
+        {% if has_page('order_list_routes.order_list_page') %}<a class="nav-link" href="/order-list">Order List</a>{% endif %}
         {% if has_page('delivery_display_routes.deliveries_page') %}<a class="nav-link" href="/deliveries">Deliveries</a>{% endif %}
       {% endif %}
       {% if current_user.role in ('chef', 'owner') and has_page('order_status_routes.kitchen_page') %}

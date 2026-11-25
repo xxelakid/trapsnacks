@@ -15,6 +15,12 @@ class EditOrderService:
             raise ValueError('Only orders that are New or Preparing can be edited.')
 
         new_items = OrderService.make_items(data.get('items'))      # same checks as FR 0
+        # An item that was already on the order keeps the price the customer was quoted;
+        # only newly added items use today's menu price.
+        old_prices = {item.menu_item_id: item.price for item in order.items}
+        for item in new_items:
+            if item.menu_item_id in old_prices:
+                item.unit_price = old_prices[item.menu_item_id]
         if order.order_type == 'delivery':
             address = (data.get('address') or '').strip()
             if not address:

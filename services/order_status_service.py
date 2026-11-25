@@ -35,3 +35,23 @@ class OrderStatusService:
                                 f'rider_{order.delivery.rider_id}')
                 Notifier.notify('delivery_changed', order.delivery.staff_dict(), 'staff')
         return order
+
+    @staticmethod
+    def mark_collected(order_id, user):
+        """The cashier hands a Ready PICKUP order to the customer: Ready -> Collected.
+        (Delivery orders finish when the rider marks them Delivered instead.)"""
+        order = db.get_or_404(Order, order_id)
+        if order.order_type != 'pickup':
+            raise ValueError(f'Order #{order.id} is a delivery. The rider marks it Delivered.')
+        if order.status != 'Ready':
+            raise ValueError(f'Order #{order.id} is {order.status}. Only Ready pickup orders can be collected.')
+
+        db.session.add(StatusChange(order_id=order.id, old_status=order.status,
+                                    new_status='Collected', user_id=user.id))
+        order.status = 'Collected'
+        db.session.commit()
+
+        update = {'id': order.id, 'status': 'Collected'}
+        for room in ('chef', 'staff'):
+            Notifier.notify('order_status_changed', update, room)
+        return order

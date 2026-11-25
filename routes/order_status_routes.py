@@ -21,3 +21,10 @@ def change_status(order_id):
     new_status = (request.get_json(silent=True) or {}).get('status')
     return run_service(lambda: OrderStatusService.change_status(order_id, new_status,
                                                                 current_user).to_dict())
+
+
+@order_status_routes.post('/api/orders/<int:order_id>/collected')
+@roles_required('cashier', 'owner')
+def mark_collected(order_id):
+    """The customer has picked up their order (pickup orders only)."""
+    return run_service(lambda: OrderStatusService.mark_collected(order_id, current_user).to_dict())

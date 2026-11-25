@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Order List{% endblock %}
+{% block content %}
+<div id="page" data-today="{{ today }}"></div>
+<div class="d-flex justify-content-between align-items-end mb-3 flex-wrap gap-2">
+  <h1 class="h4 mb-0">Order List</h1>
+  <div class="d-flex gap-2 align-items-end flex-wrap">
+    <div>
+      <label class="form-label small mb-0" for="search">Search</label>
+      <input class="form-control" type="search" id="search" placeholder="Order #, name or phone">
+    </div>
+    <div>
+      <label class="form-label small mb-0" for="day">Day</label>
+      <input class="form-control" type="date" id="day" value="{{ today }}" max="{{ today }}">
+    </div>
+    <button class="btn btn-outline-secondary" id="today-btn" type="button">Today</button>
+  </div>
+</div>
+
+<ul class="nav nav-tabs mb-3">
+  <li class="nav-item">
+    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-pickup" type="button">
+      Pickup <span id="ready-count" class="badge bg-success d-none"></span>
+    </button>
+  </li>
+  <li class="nav-item">
+    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-delivery" type="button">
+      Delivery <span id="road-count" class="badge bg-info text-dark d-none"></span>
+    </button>
+  </li>
+</ul>
+
+<div class="tab-content">
+  <!-- Pickup orders: the cashier marks Ready ones as Collected -->
+  <div class="tab-pane fade show active" id="tab-pickup">
+    <div class="btn-group mb-2 flex-wrap filter-group" data-list="pickup">
+      <button class="btn btn-outline-dark active" data-filter="all">All</button>
+      <button class="btn btn-outline-dark" data-filter="kitchen">In the kitchen</button>
+      <button class="btn btn-outline-dark" data-filter="Ready">Ready to collect</button>
+      <button class="btn btn-outline-dark" data-filter="Collected">Collected</button>
+      <button class="btn btn-outline-dark" data-filter="Cancelled">Cancelled</button>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr><th>Order</th><th>Time</th><th>Customer</th><th>Items</th><th class="text-end">Total</th><th>Status</th><th></th></tr></thead>
+        <tbody id="pickup-rows"></tbody>
+      </table>
+    </div>
+    <p id="no-pickup" class="text-muted fs-5 d-none">No pickup orders to show.</p>
+  </div>
+
+  <!-- Delivery orders: kitchen status, delivery status and rider -->
+  <div class="tab-pane fade" id="tab-delivery">
+    <div class="btn-group mb-2 flex-wrap filter-group" data-list="delivery">
+      <button class="btn btn-outline-dark active" data-filter="all">All</button>
+      <button class="btn btn-outline-dark" data-filter="active">In progress</button>
+      <button class="btn btn-outline-dark" data-filter="Delivered">Delivered</button>
+      <button class="btn btn-outline-dark" data-filter="Cancelled">Cancelled</button>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr><th>Order</th><th>Time</th><th>Customer</th><th>Address</th><th>Items</th><th class="text-end">Total</th><th>Kitchen</th><th>Delivery</th><th>Rider</th></tr></thead>
+        <tbody id="delivery-rows"></tbody>
+      </table>
+    </div>
+    <p id="no-delivery" class="text-muted fs-5 d-none">No delivery orders to show.</p>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='order_list.js') }}"></script>
+{% endblock %}
