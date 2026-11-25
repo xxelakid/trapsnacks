@@ -26,7 +26,7 @@ Open http://127.0.0.1:5000
 
     python -m pytest
 
-## Who built what
+## Team Members & Responsibilities
 
 | Feature | Member |
 |---|---|
