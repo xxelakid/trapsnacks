@@ -3,7 +3,7 @@
 # A delivery order marked "Preparing" is offered to riders (FR 4).
 
 from extensions import db
-from models import Order, StatusChange
+from models import Order, Rider, StatusChange
 from services.notifier import Notifier
 from services.request_rider import RequestRider
 
@@ -23,17 +23,23 @@ class OrderStatusService:
         order.status = new_status
         db.session.commit()
 
-        update = {'id': order.id, 'status': new_status}
+        if order.order_type == 'delivery' and new_status == 'Preparing':
+            RequestRider.offer_delivery(order)       # FR 4 starts here, and the prep countdown
+
+        # prep_deadline lets the kitchen screen show the countdown straight away
+        update = {'id': order.id, 'status': new_status, 'prep_deadline': order.to_dict()['prep_deadline']}
         for room in ('chef', 'staff'):
             Notifier.notify('order_status_changed', update, room)
 
         if order.order_type == 'delivery':
-            if new_status == 'Preparing':
-                RequestRider.offer_delivery(order)                 # FR 4 starts here
-            elif new_status == 'Ready' and order.delivery and order.delivery.rider_id:
+            if new_status == 'Ready' and order.delivery and order.delivery.rider_id:
                 Notifier.notify('order_ready_for_pickup', {'order_id': order.id},
                                 f'rider_{order.delivery.rider_id}')
                 Notifier.notify('delivery_changed', order.delivery.staff_dict(), 'staff')
+            elif new_status == 'Ready' and order.delivery and order.delivery.status == 'Offered':
+                # Nobody has accepted yet: update the open offer so riders see READY TO PICK UP
+                for rider in Rider.query.filter_by(status='available', removed=False):
+                    Notifier.notify('delivery_offer', order.delivery.offer_dict(), f'rider_{rider.id}')
         return order
 
     @staticmethod
