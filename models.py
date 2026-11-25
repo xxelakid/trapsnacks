@@ -90,6 +90,7 @@ class StatusChange(db.Model):
     new_status = db.Column(db.String(12), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     changed_at = db.Column(db.DateTime, default=datetime.now)
+    user = db.relationship('User')          # who made the change (shown in Order History)
 
 
 class Rider(db.Model):
