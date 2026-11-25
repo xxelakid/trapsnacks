@@ -25,7 +25,8 @@ class OrderService:
             if quantity < 1:
                 raise ValueError('Quantity must be at least 1.')
             result.append(OrderItem(menu_item_id=menu_item.id, quantity=quantity,
-                                    addons=(item.get('addons') or '').strip()))
+                                    addons=(item.get('addons') or '').strip(),
+                                    unit_price=menu_item.price))     # price is saved with the order
         return result
 
     @staticmethod

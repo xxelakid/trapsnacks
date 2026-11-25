@@ -11,6 +11,7 @@ from flask_socketio import join_room
 
 import routes
 from config import Config
+from db_upgrade import upgrade_database
 from extensions import csrf, db, login_manager, socketio
 from models import User
 
@@ -56,6 +57,7 @@ def create_app(config_class=Config):
 
     with app.app_context():
         db.create_all()          # creates any missing tables (never changes existing ones)
+        upgrade_database()       # ... so new columns are added here, keeping all data
     return app
 
 

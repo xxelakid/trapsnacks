@@ -2,7 +2,7 @@
 # OrderHistoryService - Order History (owner only).
 # Lists every FINISHED order so the owner can look back at past business:
 #   Delivered  - a delivery order the rider marked Delivered
-#   Pickup     - a pickup order the kitchen marked Ready (the final step for pickup orders)
+#   Collected  - a pickup order the cashier marked Collected (the customer took it)
 #   Cancelled  - any order that was cancelled, with the reason
 # Orders still in progress (New, Preparing, or a delivery still on the road) are not listed.
 
@@ -13,7 +13,7 @@ from models import Delivery, Order
 
 OUTCOMES = {
     'delivered': 'Delivered',
-    'pickup': 'Picked up (pickup order)',
+    'pickup': 'Collected (pickup)',
     'cancelled': 'Cancelled',
 }
 PER_PAGE = 50
@@ -23,7 +23,7 @@ def _conditions():
     """One SQL condition per outcome, so the filters and the counts use the same rules."""
     return {
         'delivered': and_(Order.order_type == 'delivery', Delivery.status == 'Delivered'),
-        'pickup': and_(Order.order_type == 'pickup', Order.status == 'Ready'),
+        'pickup': and_(Order.order_type == 'pickup', Order.status == 'Collected'),
         'cancelled': Order.status == 'Cancelled',
     }
 
@@ -37,8 +37,8 @@ def outcome_of(order):
 
 
 def order_total(order):
-    """Order value at the CURRENT menu prices (prices are not saved on each order)."""
-    return sum(item.menu_item.price * item.quantity for item in order.items)
+    """Order value at the prices saved when it was placed."""
+    return order.total
 
 
 def finished_at(order):

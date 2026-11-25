@@ -25,11 +25,15 @@ def make_history(cashier, chef, item, rider):
     picked_up = OrderService.create_order(pickup_data(item.id), cashier)
     OrderStatusService.change_status(picked_up.id, 'Preparing', chef)
     OrderStatusService.change_status(picked_up.id, 'Ready', chef)
+    OrderStatusService.mark_collected(picked_up.id, cashier)
 
     cancelled = OrderService.create_order(pickup_data(item.id, 'Kim'), cashier)
     CancelOrderService.cancel_order(cancelled.id, 'Duplicate order', cashier)
 
     in_progress = OrderService.create_order(pickup_data(item.id, 'Lee'), cashier)
+    waiting = OrderService.create_order(pickup_data(item.id, 'Ray'), cashier)   # Ready, not collected
+    OrderStatusService.change_status(waiting.id, 'Preparing', chef)
+    OrderStatusService.change_status(waiting.id, 'Ready', chef)
     return delivered, picked_up, cancelled, in_progress
 
 

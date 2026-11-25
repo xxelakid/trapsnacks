@@ -48,7 +48,8 @@ class Order(db.Model):
     phone = db.Column(db.String(20), default='')
     address = db.Column(db.String(200), default='')
     special_instructions = db.Column(db.Text, default='')
-    status = db.Column(db.String(12), default='New')      # New, Preparing, Ready, Cancelled
+    status = db.Column(db.String(12), default='New')      # New, Preparing, Ready, Collected, Cancelled
+    # (Collected = a pickup order the customer has taken away; set by the cashier)
     edited = db.Column(db.Boolean, default=False)
     cancel_reason = db.Column(db.String(100))
     created_at = db.Column(db.DateTime, default=datetime.now)
@@ -56,6 +57,11 @@ class Order(db.Model):
     items = db.relationship('OrderItem', backref='order', cascade='all, delete-orphan')
     changes = db.relationship('StatusChange', backref='order')
     delivery = db.relationship('Delivery', backref='order', uselist=False)
+
+    @property
+    def total(self):
+        """What the customer paid: the saved price of each item times its quantity."""
+        return sum(item.line_total for item in self.items)
 
     def to_dict(self):
         return {
@@ -69,8 +75,11 @@ class Order(db.Model):
             'edited': self.edited,
             'created_at': iso(self.created_at),
             'delivery_status': self.delivery.status if self.delivery else None,
+            'rider': self.delivery.rider.name if self.delivery and self.delivery.rider else None,
+            'cancel_reason': self.cancel_reason,
+            'total': self.total,
             'items': [{'menu_item_id': i.menu_item_id, 'name': i.menu_item.name,
-                       'qty': i.quantity, 'addons': i.addons} for i in self.items],
+                       'qty': i.quantity, 'addons': i.addons, 'price': i.price} for i in self.items],
         }
 
 
@@ -80,7 +89,19 @@ class OrderItem(db.Model):
     menu_item_id = db.Column(db.Integer, db.ForeignKey('menu_item.id'), nullable=False)
     quantity = db.Column(db.Integer, default=1)
     addons = db.Column(db.String(200), default='')
+    # The menu price when the order was placed, so changing the menu later
+    # does not change what past orders cost.
+    unit_price = db.Column(db.Float)
     menu_item = db.relationship('MenuItem')
+
+    @property
+    def price(self):
+        """The saved price (very old rows without one fall back to today's menu price)."""
+        return self.unit_price if self.unit_price is not None else self.menu_item.price
+
+    @property
+    def line_total(self):
+        return self.price * self.quantity
 
 
 class StatusChange(db.Model):

@@ -48,7 +48,7 @@ document.getElementById('confirm-btn').addEventListener('click', async () => {
 const STATUS_COLOURS = {New: 'bg-primary', Preparing: 'bg-warning text-dark', Ready: 'bg-success'};
 
 function upsertOrder(order) {
-  if (order.status === 'Cancelled') { delete orders[order.id]; } else { orders[order.id] = order; }
+  if (['Cancelled', 'Collected'].includes(order.status)) { delete orders[order.id]; } else { orders[order.id] = order; }
   renderOrders();
 }
 
@@ -67,9 +67,21 @@ function renderOrders() {
         ${['New', 'Preparing'].includes(o.status) ? `
           ${CAN_EDIT ? `<a class="btn btn-sm btn-outline-primary" href="/orders/${o.id}/edit">Edit</a>` : ''}
           ${CAN_CANCEL ? `<a class="btn btn-sm btn-outline-danger" href="/orders/${o.id}/cancel">Cancel</a>` : ''}` : ''}
+        ${o.status === 'Ready' && o.order_type === 'pickup'
+          ? `<button class="btn btn-sm btn-success collect-btn" data-id="${o.id}">Collected</button>` : ''}
       </td>
     </tr>`).join('');
 }
+
+// A Ready pickup order handed to the customer
+document.getElementById('orders').addEventListener('click', async event => {
+  const btn = event.target.closest('.collect-btn');
+  if (!btn || !confirm(`Has the customer collected order #${btn.dataset.id}?`)) return;
+  btn.disabled = true;
+  const result = await post(`/api/orders/${btn.dataset.id}/collected`);
+  if (!result.ok) { toast(result.error, 'danger'); btn.disabled = false; return; }
+  delete orders[btn.dataset.id]; renderOrders();
+});
 
 async function loadOrders() {
   const list = await getJSON('/api/orders/active');
@@ -82,7 +94,10 @@ async function loadOrders() {
 socket.on('order_created', upsertOrder);
 socket.on('order_edited', upsertOrder);
 socket.on('order_status_changed', update => {
-  if (orders[update.id]) { orders[update.id].status = update.status; renderOrders(); }
+  if (!orders[update.id]) return;
+  if (update.status === 'Collected') { delete orders[update.id]; }   // finished: leaves the list
+  else { orders[update.id].status = update.status; }
+  renderOrders();
 });
 socket.on('order_cancelled', update => { delete orders[update.id]; renderOrders(); });
 socket.on('item_availability_changed', updateMenuItem);

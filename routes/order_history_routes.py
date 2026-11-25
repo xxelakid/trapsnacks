@@ -31,7 +31,7 @@ def history_csv():
     out = io.StringIO()
     writer = csv.writer(out)
     writer.writerow(['Order', 'Outcome', 'Type', 'Ordered at', 'Finished at', 'Customer', 'Phone',
-                     'Address', 'Items', 'Total (JMD, current prices)', 'Rider', 'Cancel reason'])
+                     'Address', 'Items', 'Total (JMD)', 'Rider', 'Cancel reason'])
     for order in OrderHistoryService.all_matching(filters):
         done = finished_at(order)
         writer.writerow([
